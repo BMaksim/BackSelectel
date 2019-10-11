@@ -5,7 +5,7 @@ import websockets
 
 logging.basicConfig()
 
-STATE = {"value": 0}
+STATE = {"value": ""}
 
 USERS = set()
 
