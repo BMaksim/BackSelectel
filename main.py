@@ -5,7 +5,7 @@ import websockets
 
 logging.basicConfig()
 
-STATE = {"data": ""}
+STATE = {"data": "empty"}
 
 USERS = set()
 
@@ -47,7 +47,7 @@ async def counter(websocket, path):
         await websocket.send(state_event())
         async for message in websocket:
             data = json.loads(message)
-            if data["data"]
+            if data["data"]:
                 STATE["data"] = data["data"]
                 await notify_state()
             else:
