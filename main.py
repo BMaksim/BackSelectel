@@ -5,13 +5,13 @@ import websockets
 
 logging.basicConfig()
 
-STATE = {"value": ""}
+STATE = {"data": ""}
 
 USERS = set()
 
 
 def state_event():
-    return json.dumps({"type": "state", **STATE})
+    return json.dumps({"type": "data", **STATE})
 
 
 def users_event():
@@ -47,19 +47,16 @@ async def counter(websocket, path):
         await websocket.send(state_event())
         async for message in websocket:
             data = json.loads(message)
-            if data["action"] == "minus":
-                STATE["value"] -= 1
-                await notify_state()
-            elif data["action"] == "plus":
-                STATE["value"] += 1
+            if data["data"]
+                STATE["data"] = data["data"]
                 await notify_state()
             else:
-                logging.error("unsupported event: {}", data)
+                logging.error("Massage is empty")
     finally:
         await unregister(websocket)
 
 
-start_server = websockets.serve(counter, "localhost", 6789)
+start_server = websockets.serve(counter, "localhost", 3001)
 
 asyncio.get_event_loop().run_until_complete(start_server)
 asyncio.get_event_loop().run_forever()
