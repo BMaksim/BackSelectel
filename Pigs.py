@@ -4,7 +4,6 @@ import logging
 import websockets
 import psycopg2
 from psycopg2 import sql
-#import pickle
 
 logging.basicConfig()
 
@@ -15,7 +14,7 @@ USERS = set()
 STATES = []
 
 def state_event():
-    return json.dumps({"type": "data", **STATE})
+    return json.dumps({"type": "data", "value": STATES})
 
 
 def users_event():
@@ -52,10 +51,12 @@ async def counter(websocket, path):
         async for message in websocket:
             data = json.loads(message)
             if data:
-                STATE["value"] = data["data"]
-                STATES = []
-                for state in STATE["value"]:
-                    STATES.append(state["text"])
+                STATE["value"] = data
+                if STATE["value"]["text"] in map(lambda x: x["text"], STATES):
+                    index = list(map(lambda x: x["text"], STATES)).index(STATE["value"]["text"])
+                    STATES[index] = STATE["value"]
+                else:
+                     STATES.append(STATE["value"])
                 print(STATES)
                 await notify_state()
             else:
@@ -67,16 +68,18 @@ async def counter(websocket, path):
             cursor = conn.cursor()
             cursor.execute("SELECT s.id FROM retros_session s")
             x = cursor.fetchall()[-1][0]
-            newState = '&'.join(STATES)
-            query = "UPDATE retros_session SET aff_pain = '{newState}' WHERE id = '{x}'".format(newState = newState, x = x)
+            newState=[]
+            for state in STATES:
+                    newState.append(state["text"])
+            newState = '&'.join(newState)
+            query = "UPDATE retros_session SET pigs = '{newState}' WHERE id = '{x}'".format(newState = newState, x = x)
             cursor.execute(query)
             conn.commit()
             cursor.close()
             conn.close()
 
 
-
-start_server = websockets.serve(counter, "0.0.0.0", 3001)
+start_server = websockets.serve(counter, "0.0.0.0", 3003)
 
 asyncio.get_event_loop().run_until_complete(start_server)
 asyncio.get_event_loop().run_forever()

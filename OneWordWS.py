@@ -4,7 +4,6 @@ import logging
 import websockets
 import psycopg2
 from psycopg2 import sql
-#import pickle
 
 logging.basicConfig()
 
@@ -51,11 +50,9 @@ async def counter(websocket, path):
         await websocket.send(state_event())
         async for message in websocket:
             data = json.loads(message)
-            if data:
+            if data["data"] != '':
                 STATE["value"] = data["data"]
-                STATES = []
-                for state in STATE["value"]:
-                    STATES.append(state["text"])
+                STATES.append(data["data"])
                 print(STATES)
                 await notify_state()
             else:
@@ -65,18 +62,16 @@ async def counter(websocket, path):
         if len(USERS) == 0:
             conn = psycopg2.connect(dbname='retrospective_db', user='retro_user', password='2427980baba', host='127.0.0.1', port='5432')
             cursor = conn.cursor()
-            cursor.execute("SELECT s.id FROM retros_session s")
+            cursor.execute("SELECT id FROM retros_session")
             x = cursor.fetchall()[-1][0]
-            newState = '&'.join(STATES)
-            query = "UPDATE retros_session SET aff_pain = '{newState}' WHERE id = '{x}'".format(newState = newState, x = x)
+            newState= '&'.join(STATES)
+            query = "UPDATE retros_session SET oneword = '{newState}' WHERE id = '{x}'".format(newState = newState, x = x)
             cursor.execute(query)
             conn.commit()
             cursor.close()
             conn.close()
 
-
-
-start_server = websockets.serve(counter, "0.0.0.0", 3001)
+start_server = websockets.serve(counter, "0.0.0.0", 3004)
 
 asyncio.get_event_loop().run_until_complete(start_server)
 asyncio.get_event_loop().run_forever()
